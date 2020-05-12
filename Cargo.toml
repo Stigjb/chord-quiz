@@ -1,0 +1,23 @@
+[package]
+name = "chord-quiz"
+version = "0.1.0"
+authors = ["Stig Johan Berggren <stigjb@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+log = "0.4"
+serde = "1"
+serde_derive = "1"
+wasm-bindgen = "0.2.58"
+wasm-logger = "0.2"
+wee_alloc = { version = "0.4.4", optional = true }
+yew = "0.16"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[dependencies.web-sys]
+version = "0.3.4"
