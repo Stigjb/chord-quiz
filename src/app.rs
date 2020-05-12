@@ -28,13 +28,18 @@ impl Component for App {
                 <h1>{ "Identify the chord" }</h1>
                 <h2>{ "Triads"}</h2>
                 <div class="d-flex flex-wrap">
-                    { for (-5..10).map(score::triad_example) }
+                    { for (-7..12).map(score::triad_example) }
                 </div>
                 <h2>{ "Tetrads"}</h2>
                 <div class="d-flex flex-wrap">
                     { score::c_maj_7() }
                     { score::c_7() }
                 </div>
+                <footer>
+                    { "Author: Stig Johan Berggren <" }
+                    <a href="mailto:stigjb@gmail.com">{ "stigjb@gmail.com" }</a>
+                    { ">" }
+                </footer>
             </div>
         }
     }

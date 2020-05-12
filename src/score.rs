@@ -113,14 +113,21 @@ impl Builder {
     fn triad(mut self, bottom: &StaffPosition) -> Self {
         let staff_positions: Vec<StaffPosition> =
             vec![0, 2, 4].iter().map(|i: &i16| bottom + *i).collect();
-        let notes = staff_positions.iter().map(|i| note(self.cursor, i));
-        let leger_positions = (staff_positions[0].0..-2)
+        let bottom_pos = &staff_positions[0];
+        let top_pos = &staff_positions[2];
+        let lowest_leger = bottom_pos.0 - bottom_pos.0 % 2;
+
+        // Even valued positions <= -2 and >= 10 are candidates for leger lines
+        let leger_positions = (lowest_leger..=-2)
             .step_by(2)
-            .chain((10..staff_positions[2].0).step_by(2));
+            .chain((10..=top_pos.0).step_by(2));
         let legers = leger_positions.map(|l| {
             let d = format!("M{},{} h8.752", self.cursor - 1., StaffPosition(l).to_y());
             html! { <path d=d stroke-width=LEGER_LINE_THICKNESS stroke="black" /> }
         });
+
+        // Create a note at each position
+        let notes = staff_positions.iter().map(|i| note(self.cursor, i));
         let triad = html! {
             <g>
                 { for legers }
