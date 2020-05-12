@@ -30,7 +30,7 @@ impl Component for App {
                 <div class="d-flex flex-wrap">
                     { for (-5..10).map(score::triad_example) }
                 </div>
-                <h2>{ "Tetrachords"}</h2>
+                <h2>{ "Tetrads"}</h2>
                 <div class="d-flex flex-wrap">
                     { score::c_maj_7() }
                     { score::c_7() }

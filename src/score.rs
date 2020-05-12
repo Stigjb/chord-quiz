@@ -17,9 +17,9 @@ pub fn c_maj_7() -> Html {
     Builder::new()
         .space(0.5)
         .clef(F_CLEF)
-        .space(3.5)
+        .space(6.)
         .chord()
-        .space(3.)
+        .space(6.)
         .barline()
         .into_svg()
 }
@@ -28,11 +28,11 @@ pub fn c_7() -> Html {
     Builder::new()
         .space(0.5)
         .clef(G_CLEF)
-        .space(3.5)
+        .space(6.)
         .accidentals()
         .space(1.5)
         .chord()
-        .space(3.)
+        .space(6.)
         .barline()
         .into_svg()
 }
@@ -41,9 +41,9 @@ pub fn triad_example(bottom: i16) -> Html {
     Builder::new()
         .space(0.5)
         .clef(G_CLEF)
-        .space(3.5)
+        .space(6.)
         .triad(&StaffPosition(bottom))
-        .space(3.)
+        .space(6.)
         .barline()
         .into_svg()
 }
@@ -111,29 +111,16 @@ impl Builder {
     }
 
     fn triad(mut self, bottom: &StaffPosition) -> Self {
-        let staff_positions: Vec<StaffPosition> = vec![0, 2, 4].iter().map(|i: &i16| bottom + *i).collect();
+        let staff_positions: Vec<StaffPosition> =
+            vec![0, 2, 4].iter().map(|i: &i16| bottom + *i).collect();
         let notes = staff_positions.iter().map(|i| note(self.cursor, i));
-        let mut legers: Vec<Html> = Vec::new();
-        if staff_positions[0].0 <= -2 {
-            let d = format!("M{},{} h8.752", self.cursor - 1., StaffPosition(-2).to_y());
-            let leger = html! { <path d=d stroke-width=LEGER_LINE_THICKNESS stroke="black" /> };
-            legers.push(leger);
-        }
-        if staff_positions[0].0 <= -4 {
-            let d = format!("M{},{} h8.752", self.cursor - 1., StaffPosition(-4).to_y());
-            let leger = html! { <path d=d stroke-width=LEGER_LINE_THICKNESS stroke="black" /> };
-            legers.push(leger);
-        }
-        if staff_positions[2].0 >= 10 {
-            let d = format!("M{},{} h8.752", self.cursor - 1., StaffPosition(10).to_y());
-            let leger = html! { <path d=d stroke-width=LEGER_LINE_THICKNESS stroke="black" /> };
-            legers.push(leger);
-        }
-        if staff_positions[2].0 >= 12 {
-            let d = format!("M{},{} h8.752", self.cursor - 1., StaffPosition(12).to_y());
-            let leger = html! { <path d=d stroke-width=LEGER_LINE_THICKNESS stroke="black" /> };
-            legers.push(leger);
-        }
+        let leger_positions = (staff_positions[0].0..-2)
+            .step_by(2)
+            .chain((10..staff_positions[2].0).step_by(2));
+        let legers = leger_positions.map(|l| {
+            let d = format!("M{},{} h8.752", self.cursor - 1., StaffPosition(l).to_y());
+            html! { <path d=d stroke-width=LEGER_LINE_THICKNESS stroke="black" /> }
+        });
         let triad = html! {
             <g>
                 { for legers }
