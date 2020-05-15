@@ -1,0 +1,4 @@
+@font-face {
+    font-family: "Bravura";
+    src: url("Bravura.woff2") format("woff2"), url("Bravura.woff") format("woff");
+}
