@@ -1,21 +1,20 @@
 use std::fmt;
 
-use log::info;
 use tonality;
 use tonality::{Accidental, Alteration, Key, Step, Tpc};
 use yew::Html;
 
 use crate::score;
-use crate::score::{triad_example, StaffPosition};
+use crate::score::StaffPosition;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Chord {
-    key: tonality::Key,
+    key: Key,
     kind: Kind,
 }
 
 impl Chord {
-    pub fn new(key: tonality::Key, kind: Kind) -> Self {
+    pub fn new(key: Key, kind: Kind) -> Self {
         Self { key, kind }
     }
 
@@ -38,9 +37,16 @@ impl Chord {
     }
 
     pub fn staff_positions(&self, clef: Clef) -> Vec<StaffPosition> {
+        let root_position = clef.position(self.tpcs()[0].step());
         self.tpcs()
             .into_iter()
-            .map(|tpc| clef.position(tpc.step()))
+            .map(|tpc| {
+                let mut pos = clef.position(tpc.step());
+                while pos < root_position {
+                    pos = &pos + 7;
+                }
+                pos
+            })
             .collect()
     }
 
@@ -49,14 +55,8 @@ impl Chord {
             .iter()
             .zip(self.staff_positions(Clef::G))
             .filter_map(|(t, p)| match t.altered_step(None) {
-                (_, Some(acc)) => {
-                    info!("Accidental for {:?}: {:?}", t, acc);
-                    Some((acc, p))
-                }
-                (_, None) => {
-                    info!("No accidental for {:?}", t);
-                    None
-                }
+                (_, Some(acc)) => Some((acc, p)),
+                (_, None) => None,
             })
             .collect()
     }

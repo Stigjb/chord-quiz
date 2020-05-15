@@ -31,53 +31,6 @@ fn accidental_glyph(acc: &Accidental) -> char {
     }
 }
 
-pub fn c_maj_7() -> Html {
-    let staff_positions = vec![
-        StaffPosition(-2),
-        StaffPosition(0),
-        StaffPosition(2),
-        StaffPosition(4),
-    ];
-    Builder::new()
-        .space(0.5)
-        .clef(&chord::Clef::F)
-        .space(6.)
-        .chord(&staff_positions)
-        .space(6.)
-        .barline()
-        .into_svg()
-}
-
-pub fn c_7() -> Html {
-    let staff_positions = vec![
-        StaffPosition(-2),
-        StaffPosition(0),
-        StaffPosition(2),
-        StaffPosition(4),
-    ];
-    Builder::new()
-        .space(0.5)
-        .clef(&chord::Clef::G)
-        .space(6.)
-        .accidentals(&vec![(Accidental::Flat, StaffPosition::new(4))])
-        .space(1.5)
-        .chord(&staff_positions)
-        .space(6.)
-        .barline()
-        .into_svg()
-}
-
-pub fn triad_example(bottom: i32) -> Html {
-    Builder::new()
-        .space(0.5)
-        .clef(&chord::Clef::G)
-        .space(6.)
-        .triad(&StaffPosition(bottom))
-        .space(6.)
-        .barline()
-        .into_svg()
-}
-
 pub struct Builder {
     cursor: f32,
     nodes: Vec<Html>,
@@ -124,12 +77,6 @@ impl Builder {
             .collect::<Html>();
         self.nodes.push(accidentals);
         self
-    }
-
-    pub fn triad(self, bottom: &StaffPosition) -> Self {
-        let staff_positions: Vec<StaffPosition> =
-            vec![0, 2, 4].iter().map(|i: &i32| bottom + *i).collect();
-        self.chord(&staff_positions)
     }
 
     pub fn barline(mut self) -> Self {
@@ -209,7 +156,7 @@ fn align_accidentals(accs: &[(Accidental, StaffPosition)]) -> Vec<f32> {
         if top.0 - pos.0 >= 6 {
             top = &pos;
             indent = 0.;
-        }        
+        }
         indents.push(indent);
         indent -= STAFF_SPACE;
     }
