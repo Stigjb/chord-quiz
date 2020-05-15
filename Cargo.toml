@@ -15,6 +15,12 @@ wasm-bindgen = "0.2.58"
 wasm-logger = "0.2"
 wee_alloc = { version = "0.4.4", optional = true }
 yew = "0.16"
+rand = { version = "0.7.3", features = ["wasm-bindgen"] }
+tonality = "0.0.1"
+num-traits = "0.2.11"
+
+[patch.crates-io]
+tonality = { path = "../tonality" }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

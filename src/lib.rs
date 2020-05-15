@@ -2,6 +2,7 @@
 #![warn(clippy::pedantic)]
 
 mod app;
+mod chord;
 mod score;
 
 use wasm_bindgen::prelude::*;
