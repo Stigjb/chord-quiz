@@ -25,7 +25,10 @@ module.exports = (env, argv) => {
       ],
     },
     plugins: [
-      new CopyWebpackPlugin([{ from: "./static", to: distPath }]),
+      new CopyWebpackPlugin(
+        [{ from: "./static", to: distPath }],
+        { ignore: ["bravura_metadata.json", "Bravura.otf"] }
+      ),
       new WasmPackPlugin({
         crateDirectory: ".",
         extraArgs: "--no-typescript",
