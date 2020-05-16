@@ -1,4 +1,3 @@
-use log::info;
 use tonality::Accidental;
 use yew::{html, Html};
 
@@ -62,7 +61,6 @@ impl Builder {
     }
 
     pub fn accidentals(mut self, accs: &[(Accidental, StaffPosition)]) -> Self {
-        info!("Adding accidentals {:?}", accs);
         let mut sorted_accs: Vec<_> = accs.to_owned();
         sorted_accs.sort_unstable_by_key(|(_, pos)| -pos.0);
         let indents = align_accidentals(&sorted_accs);

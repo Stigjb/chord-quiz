@@ -538,9 +538,9 @@ dependencies = [
 
 [[package]]
 name = "tonality"
-version = "0.0.2"
+version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "186fc6b43d162bff07e34ed301bad09e326fb89a147e13d1e610d16890e448bd"
+checksum = "e20e11adb5e375390c15953a3aba82aa516b31d9a989b3e9170a489e91e1be53"
 dependencies = [
  "num-derive",
  "num-traits",

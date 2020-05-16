@@ -1,7 +1,7 @@
 use log::info;
 use num_traits::FromPrimitive;
 use rand::Rng;
-use tonality::Key;
+use tonality::Tpc;
 use yew::prelude::*;
 
 use crate::chord::{Chord, Kind};
@@ -18,17 +18,30 @@ pub enum Msg {
 }
 
 fn random_chord() -> Chord {
+    use crate::chord::{Tetrad, Triad};
+
     let mut rng = rand::thread_rng();
-    let (key_lo, key_hi) = (Key::Gb as isize, Key::Fs as isize);
-    let key_num = rng.gen_range(key_lo, key_hi);
-    let key: Key = FromPrimitive::from_isize(key_num).unwrap();
-    let chord = match rng.gen_range(0, 4) {
-        0 => Kind::Triad(crate::chord::Triad::Maj),
-        1 => Kind::Triad(crate::chord::Triad::Min),
-        2 => Kind::Triad(crate::chord::Triad::Dim),
-        _ => Kind::Triad(crate::chord::Triad::Aug),
-    };
-    Chord::new(key, chord)
+    let (tpc_lo, tpc_hi) = (Tpc::Fb as isize, Tpc::Bs as isize);
+    loop {
+        let tpc_num = rng.gen_range(tpc_lo, tpc_hi);
+        let root: Tpc = FromPrimitive::from_isize(tpc_num).unwrap();
+        let chord = match rng.gen_range(0, 9) {
+            0 => Kind::Triad(Triad::Maj),
+            1 => Kind::Triad(Triad::Min),
+            2 => Kind::Triad(Triad::Dim),
+            3 => Kind::Triad(Triad::Aug),
+            4 => Kind::Tetrad(Tetrad::Dom7),
+            5 => Kind::Tetrad(Tetrad::Dim7),
+            6 => Kind::Tetrad(Tetrad::Maj7),
+            7 => Kind::Tetrad(Tetrad::Min7),
+            _ => Kind::Tetrad(Tetrad::Min7b5),
+        };
+        if let Some(chord) = Chord::new(root.clone(), chord.clone()) {
+            return chord;
+        } else {
+            info!("Out of range with {:?}, {:?}", root, chord)
+        }
+    }
 }
 
 impl Component for App {
@@ -61,7 +74,6 @@ impl Component for App {
     }
 
     fn view(&self) -> Html {
-        info!("rendered!");
         let answer = if self.revealed {
             self.chord.to_string()
         } else {

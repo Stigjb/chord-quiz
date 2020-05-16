@@ -1,6 +1,6 @@
 use std::fmt;
 
-use tonality::{Accidental, Alteration, Key, Step, Tpc};
+use tonality::{Accidental, Interval, Step, Tpc};
 use yew::Html;
 
 use crate::score;
@@ -8,13 +8,14 @@ use crate::score::StaffPosition;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Chord {
-    key: Key,
+    root: Tpc,
     kind: Kind,
+    tpcs: Vec<Tpc>,
 }
 
 impl Chord {
-    pub fn new(key: Key, kind: Kind) -> Self {
-        Self { key, kind }
+    pub fn new(root: Tpc, kind: Kind) -> Option<Self> {
+        kind.with_root(&root).map(|tpcs| Self { root, kind, tpcs })
     }
 
     pub fn to_svg(&self) -> Html {
@@ -31,14 +32,10 @@ impl Chord {
             .into_svg()
     }
 
-    fn tpcs(&self) -> Vec<Tpc> {
-        self.kind.with_key(&self.key)
-    }
-
     pub fn staff_positions(&self, clef: &Clef) -> Vec<StaffPosition> {
-        let root_position = clef.position(self.tpcs()[0].step());
-        self.tpcs()
-            .into_iter()
+        let root_position = clef.position(self.tpcs[0].step());
+        self.tpcs
+            .iter()
             .map(|tpc| {
                 let mut pos = clef.position(tpc.step());
                 while pos < root_position {
@@ -50,7 +47,7 @@ impl Chord {
     }
 
     fn accidentals(&self) -> Vec<(Accidental, StaffPosition)> {
-        self.tpcs()
+        self.tpcs
             .iter()
             .zip(self.staff_positions(&Clef::G))
             .filter_map(|(t, p)| match t.altered_step(None) {
@@ -63,10 +60,7 @@ impl Chord {
 
 impl Default for Chord {
     fn default() -> Self {
-        Self {
-            key: Key::default(),
-            kind: Kind::Triad(Triad::Maj),
-        }
+        Self::new(Tpc::C, Kind::Triad(Triad::Maj)).unwrap()
     }
 }
 
@@ -102,31 +96,48 @@ impl Clef {
 
 impl fmt::Display for Chord {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let (step, alter) = self.root.altered_step(None);
+        let alter = alter
+            .map(|acc| match acc {
+                Accidental::DblFlat => "♭♭",
+                Accidental::Flat => "♭",
+                Accidental::Natural => "",
+                Accidental::Sharp => "♯",
+                Accidental::DblSharp => "♯♯",
+            })
+            .unwrap_or("");
         let kind = match self.kind {
-            Kind::Triad(Triad::Aug) => "augmented",
-            Kind::Triad(Triad::Maj) => "major",
-            Kind::Triad(Triad::Min) => "minor",
-            Kind::Triad(Triad::Dim) => "diminished",
+            Kind::Triad(Triad::Aug) => "+",
+            Kind::Triad(Triad::Maj) => "",
+            Kind::Triad(Triad::Min) => "m",
+            Kind::Triad(Triad::Dim) => "m♭5",
+            Kind::Tetrad(Tetrad::Maj7) => "maj7",
+            Kind::Tetrad(Tetrad::Min7) => "m7",
+            Kind::Tetrad(Tetrad::Min7b5) => "m7♭5",
+            Kind::Tetrad(Tetrad::Dom7) => "7",
+            Kind::Tetrad(Tetrad::Dim7) => "dim7",
         };
-        write!(f, "{:?} {}", self.key, kind)
+        write!(f, "{:?}{}{}", step, alter, kind)
     }
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Kind {
     Triad(Triad),
+    Tetrad(Tetrad),
 }
 
 impl Kind {
-    pub fn intervals(&self) -> Vec<(isize, isize)> {
+    pub fn intervals(&self) -> Vec<Interval> {
         match self {
             Self::Triad(t) => t.intervals(),
+            Self::Tetrad(t) => t.intervals(),
         }
     }
-    pub fn with_key(&self, key: &Key) -> Vec<Tpc> {
+    pub fn with_root(&self, root: &Tpc) -> Option<Vec<Tpc>> {
         self.intervals()
             .iter()
-            .filter_map(|&(scale_deg, alter)| key.scale_degree(scale_deg).alter(alter))
+            .map(|&interval| root.clone() + interval)
             .collect()
     }
 }
@@ -140,12 +151,35 @@ pub enum Triad {
 }
 
 impl Triad {
-    pub fn intervals(&self) -> Vec<(isize, Alteration)> {
+    pub fn intervals(&self) -> Vec<Interval> {
+        use Interval::*;
         match self {
-            Self::Maj => vec![(0, 0), (2, 0), (4, 0)],
-            Self::Min => vec![(0, 0), (2, -1), (4, 0)],
-            Self::Dim => vec![(0, 0), (2, -1), (4, -1)],
-            Self::Aug => vec![(0, 0), (2, 0), (4, 1)],
+            Self::Maj => vec![Unison, Maj3, P5],
+            Self::Min => vec![Unison, Min3, P5],
+            Self::Dim => vec![Unison, Min3, Dim5],
+            Self::Aug => vec![Unison, Maj3, Aug5],
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Tetrad {
+    Dom7,
+    Maj7,
+    Min7,
+    Min7b5,
+    Dim7,
+}
+
+impl Tetrad {
+    pub fn intervals(&self) -> Vec<Interval> {
+        use Interval::*;
+        match self {
+            Tetrad::Dom7 => vec![Unison, Maj3, P5, Min7],
+            Tetrad::Maj7 => vec![Unison, Maj3, P5, Maj7],
+            Tetrad::Min7 => vec![Unison, Min3, P5, Min7],
+            Tetrad::Min7b5 => vec![Unison, Min3, Dim5, Min7],
+            Tetrad::Dim7 => vec![Unison, Min3, Dim5, Dim7],
         }
     }
 }

@@ -13,7 +13,7 @@ num-traits = "0.2.11"
 rand = { version = "0.7.3", features = ["wasm-bindgen"] }
 serde = "1"
 serde_derive = "1"
-tonality = "0.0.2"
+tonality = "0.0.3"
 wasm-bindgen = "0.2.58"
 wasm-logger = "0.2"
 wee_alloc = { version = "0.4.4", optional = true }
