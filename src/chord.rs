@@ -1,6 +1,5 @@
 use std::fmt;
 
-use tonality;
 use tonality::{Accidental, Alteration, Key, Step, Tpc};
 use yew::Html;
 
@@ -26,17 +25,17 @@ impl Chord {
             .space(6.)
             .accidentals(&self.accidentals())
             .space(1.5)
-            .chord(&self.staff_positions(clef))
+            .chord(&self.staff_positions(&clef))
             .space(6.)
             .barline()
             .into_svg()
     }
 
     fn tpcs(&self) -> Vec<Tpc> {
-        self.kind.with_key(self.key.clone())
+        self.kind.with_key(&self.key)
     }
 
-    pub fn staff_positions(&self, clef: Clef) -> Vec<StaffPosition> {
+    pub fn staff_positions(&self, clef: &Clef) -> Vec<StaffPosition> {
         let root_position = clef.position(self.tpcs()[0].step());
         self.tpcs()
             .into_iter()
@@ -53,7 +52,7 @@ impl Chord {
     fn accidentals(&self) -> Vec<(Accidental, StaffPosition)> {
         self.tpcs()
             .iter()
-            .zip(self.staff_positions(Clef::G))
+            .zip(self.staff_positions(&Clef::G))
             .filter_map(|(t, p)| match t.altered_step(None) {
                 (_, Some(acc)) => Some((acc, p)),
                 (_, None) => None,
@@ -124,7 +123,7 @@ impl Kind {
             Self::Triad(t) => t.intervals(),
         }
     }
-    pub fn with_key(&self, key: Key) -> Vec<Tpc> {
+    pub fn with_key(&self, key: &Key) -> Vec<Tpc> {
         self.intervals()
             .iter()
             .filter_map(|&(scale_deg, alter)| key.scale_degree(scale_deg).alter(alter))

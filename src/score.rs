@@ -174,6 +174,7 @@ impl StaffPosition {
         Self(pos)
     }
 
+    #[allow(clippy::cast_precision_loss)]
     pub fn to_y(&self) -> f32 {
         (4. - self.0 as f32 / 2.) * STAFF_SPACE
     }

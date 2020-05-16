@@ -4,9 +4,7 @@ use rand::Rng;
 use tonality::Key;
 use yew::prelude::*;
 
-use crate::{
-    chord::{Chord, Kind},
-};
+use crate::chord::{Chord, Kind};
 
 pub struct App {
     link: ComponentLink<Self>,
@@ -86,8 +84,8 @@ impl Component for App {
             <>
             <main class="container">
                 <h1>{ "Identify the chord" }</h1>
-                <div class="d-flex flex-wrap">{ self.chord.to_svg() }</div>
-                <div id="answer">{ answer }</div>
+                <div class="score-wrapper">{ self.chord.to_svg() }</div>
+                <div class="answer">{ answer }</div>
                 { button }
             </main>
             <footer class="footer">
