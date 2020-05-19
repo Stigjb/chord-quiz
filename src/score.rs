@@ -11,8 +11,6 @@ const LEGER_LINE_THICKNESS: f32 = 0.16 * STAFF_SPACE;
 const THIN_BARLINE_THICKNESS: f32 = 0.16 * STAFF_SPACE;
 const BARLINE_SEPARATION: f32 = 0.4 * STAFF_SPACE;
 
-const G_CLEF: char = '\u{e050}';
-const F_CLEF: char = '\u{e062}';
 const NOTEHEAD_WHOLE: char = '\u{e0a2}';
 const ACCIDENTAL_FLAT: char = '\u{e260}';
 const ACCIDENTAL_NATURAL: char = '\u{e261}';
@@ -64,6 +62,11 @@ impl Builder {
         let mut sorted_accs: Vec<_> = accs.to_owned();
         sorted_accs.sort_unstable_by_key(|(_, pos)| -pos.0);
         let indents = align_accidentals(&sorted_accs);
+        let max_indent = indents
+            .iter()
+            .min_by(|&a, &b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+            .unwrap_or(&0.);
+        self.cursor -= max_indent;
         let accidentals = sorted_accs
             .iter()
             .zip(indents)

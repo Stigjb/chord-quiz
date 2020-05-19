@@ -5,26 +5,35 @@ use yew::Html;
 
 use crate::score;
 use crate::score::StaffPosition;
+use crate::tpc_octave::TpcOctave;
+
+const G_CLEF: char = '\u{e050}';
+const F_CLEF: char = '\u{e062}';
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Chord {
-    root: Tpc,
+    root: TpcOctave,
     kind: Kind,
-    tpcs: Vec<Tpc>,
+    tpcs: Vec<TpcOctave>,
 }
 
 impl Chord {
-    pub fn new(root: Tpc, kind: Kind) -> Option<Self> {
+    pub fn new(root: TpcOctave, kind: Kind) -> Option<Self> {
         kind.with_root(&root).map(|tpcs| Self { root, kind, tpcs })
     }
 
     pub fn to_svg(&self) -> Html {
-        let clef = Clef::G;
+        let clef =
+            if self.root.1 >= 4 || (self.root.1 >= 3 && self.root.0.step() as i8 > Step::E as i8) {
+                Clef::G
+            } else {
+                Clef::F
+            };
         score::Builder::new()
             .space(0.5)
             .clef(&clef)
             .space(6.)
-            .accidentals(&self.accidentals())
+            .accidentals(&self.accidentals(&clef))
             .space(1.5)
             .chord(&self.staff_positions(&clef))
             .space(6.)
@@ -33,11 +42,11 @@ impl Chord {
     }
 
     pub fn staff_positions(&self, clef: &Clef) -> Vec<StaffPosition> {
-        let root_position = clef.position(self.tpcs[0].step());
+        let root_position = clef.position(&self.tpcs[0]);
         self.tpcs
             .iter()
             .map(|tpc| {
-                let mut pos = clef.position(tpc.step());
+                let mut pos = clef.position(tpc);
                 while pos < root_position {
                     pos = &pos + 7;
                 }
@@ -46,11 +55,11 @@ impl Chord {
             .collect()
     }
 
-    fn accidentals(&self) -> Vec<(Accidental, StaffPosition)> {
+    fn accidentals(&self, clef: &Clef) -> Vec<(Accidental, StaffPosition)> {
         self.tpcs
             .iter()
-            .zip(self.staff_positions(&Clef::G))
-            .filter_map(|(t, p)| match t.altered_step(None) {
+            .zip(self.staff_positions(&clef))
+            .filter_map(|(t, p)| match t.0.altered_step(None) {
                 (_, Some(acc)) => Some((acc, p)),
                 (_, None) => None,
             })
@@ -60,7 +69,8 @@ impl Chord {
 
 impl Default for Chord {
     fn default() -> Self {
-        Self::new(Tpc::C, Kind::Triad(Triad::Maj)).unwrap()
+        let root = TpcOctave(Tpc::C, 4);
+        Self::new(root, Kind::Triad(Triad::Maj)).unwrap()
     }
 }
 
@@ -72,31 +82,34 @@ pub enum Clef {
 }
 
 impl Clef {
-    fn bottom_staff_position(&self) -> Step {
+    fn bottom_staff_position(&self) -> (Step, i8) {
         match self {
-            Self::G => Step::E,
-            Self::C => Step::F,
-            Self::F => Step::G,
+            Self::G => (Step::E, 4),
+            Self::C => (Step::F, 3),
+            Self::F => (Step::G, 2),
         }
     }
 
     pub fn to_glyph(&self) -> char {
         match self {
-            Self::G => '\u{e050}',
+            Self::G => G_CLEF,
             Self::C => '@',
-            Self::F => '\u{e062}',
+            Self::F => F_CLEF,
         }
     }
 
-    pub fn position(&self, step: Step) -> StaffPosition {
-        let delta = step as i32 - self.bottom_staff_position() as i32;
-        StaffPosition::new(delta)
+    pub fn position(&self, tpc_octave: &TpcOctave) -> StaffPosition {
+        let step = tpc_octave.0.step();
+        let (bottom_step, bottom_octave) = self.bottom_staff_position();
+        let step_delta = step as i32 - bottom_step as i32;
+        let octave_delta = 7 * (tpc_octave.1 - bottom_octave);
+        StaffPosition::new(step_delta + octave_delta as i32)
     }
 }
 
 impl fmt::Display for Chord {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let (step, alter) = self.root.altered_step(None);
+        let (step, alter) = self.root.0.altered_step(None);
         let alter = alter
             .map(|acc| match acc {
                 Accidental::DblFlat => "♭♭",
@@ -134,7 +147,7 @@ impl Kind {
             Self::Tetrad(t) => t.intervals(),
         }
     }
-    pub fn with_root(&self, root: &Tpc) -> Option<Vec<Tpc>> {
+    pub fn with_root(&self, root: &TpcOctave) -> Option<Vec<TpcOctave>> {
         self.intervals()
             .iter()
             .map(|&interval| root.clone() + interval)
