@@ -4,6 +4,7 @@
 mod app;
 mod chord;
 mod score;
+mod settings;
 mod tpc_octave;
 
 use wasm_bindgen::prelude::*;

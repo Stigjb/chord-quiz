@@ -4,6 +4,7 @@ use tonality::Tpc;
 use yew::prelude::*;
 
 use crate::chord::{Chord, Kind};
+use crate::settings::Settings;
 use crate::tpc_octave::TpcOctave;
 
 pub struct App {
@@ -132,19 +133,7 @@ impl Component for App {
                 <div class="score-wrapper">{ self.chord.to_svg() }</div>
                 <div class="answer">{ answer }</div>
                 { button }
-                <h2>{ "Settings" }</h2>
-                <div class="form-check">
-                    <input
-                        id="dbl-toggle"
-                        class="form-check-input"
-                        type="checkbox"
-                        checked=self.use_dbl_accidentals
-                        onchange=on_toggle
-                    />
-                    <label for="dbl-toggle" class="form-check-label">
-                        { "Allow double sharps and flats" }
-                    </label>
-                </div>
+                <Settings allow_dbl_accidentals=self.use_dbl_accidentals on_toggle=on_toggle />
             </main>
             <footer class="footer">
                 <div class="container text-muted">
