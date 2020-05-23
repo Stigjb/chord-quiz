@@ -1,4 +1,3 @@
-use log::info;
 use num_traits::FromPrimitive;
 use rand::Rng;
 use tonality::Tpc;
@@ -13,41 +12,53 @@ pub struct App {
     revealed: bool,
     num_chords: usize,
     num_correct: usize,
+    use_dbl_accidentals: bool,
 }
 
 pub enum Msg {
     Reveal,
     NextCorrect,
     NextWrong,
+    ToggleDblAccidentals,
 }
 
-fn random_chord() -> Chord {
-    use crate::chord::{Tetrad, Triad};
-
-    let mut rng = rand::thread_rng();
-    let (tpc_lo, tpc_hi) = (Tpc::Fb as isize, Tpc::Bs as isize);
-    loop {
-        let tpc_num = rng.gen_range(tpc_lo, tpc_hi);
-        let tpc: Tpc = FromPrimitive::from_isize(tpc_num).unwrap();
-        let octave = rng.gen_range(2, 5);
-        let root = TpcOctave(tpc, octave);
-        let chord = match rng.gen_range(0, 9) {
-            0 => Kind::Triad(Triad::Maj),
-            1 => Kind::Triad(Triad::Min),
-            2 => Kind::Triad(Triad::Dim),
-            3 => Kind::Triad(Triad::Aug),
-            4 => Kind::Tetrad(Tetrad::Dom7),
-            5 => Kind::Tetrad(Tetrad::Dim7),
-            6 => Kind::Tetrad(Tetrad::Maj7),
-            7 => Kind::Tetrad(Tetrad::Min7),
-            _ => Kind::Tetrad(Tetrad::Min7b5),
-        };
-        if let Some(chord) = Chord::new(root.clone(), chord.clone()) {
-            return chord;
-        } else {
-            info!("Out of range with {:?}, {:?}", root, chord)
-        }
+fn root_range(chord: &Kind, use_dbl_accidentals: bool) -> (isize, isize) {
+    if use_dbl_accidentals {
+        (
+            chord.flattest_root() as isize,
+            chord.sharpest_root() as isize,
+        )
+    } else {
+        (
+            chord.flattest_root_no_dbl_flat() as isize,
+            chord.sharpest_root_no_dbl_sharp() as isize,
+        )
     }
+}
+
+fn random_chord(use_dbl_accidentals: bool) -> Chord {
+    let mut rng = rand::thread_rng();
+
+    let chord = match rng.gen_range(0, 9) {
+        0 => Kind::Maj,
+        1 => Kind::Min,
+        2 => Kind::Dim,
+        3 => Kind::Aug,
+        4 => Kind::Dom7,
+        5 => Kind::Dim7,
+        6 => Kind::Maj7,
+        7 => Kind::Min7,
+        _ => Kind::Min7b5,
+    };
+
+    let (tpc_low, tpc_high) = root_range(&chord, use_dbl_accidentals);
+
+    let tpc_num = rng.gen_range(tpc_low, tpc_high);
+    let tpc: Tpc = FromPrimitive::from_isize(tpc_num).unwrap();
+    let octave = rng.gen_range(2, 5);
+    let root = TpcOctave(tpc, octave);
+    Chord::new(root.clone(), chord.clone())
+        .expect(&format!("Out of range with {:?}, {:?}", root, chord))
 }
 
 impl Component for App {
@@ -55,7 +66,7 @@ impl Component for App {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let chord = random_chord();
+        let chord = random_chord(false);
         let revealed = false;
         Self {
             link,
@@ -63,6 +74,7 @@ impl Component for App {
             revealed,
             num_chords: 0,
             num_correct: 0,
+            use_dbl_accidentals: false,
         }
     }
 
@@ -76,14 +88,15 @@ impl Component for App {
             Msg::NextCorrect => {
                 self.num_correct += 1;
                 self.num_chords += 1;
-                self.chord = random_chord();
+                self.chord = random_chord(self.use_dbl_accidentals);
                 self.revealed = false
             }
             Msg::NextWrong => {
                 self.num_chords += 1;
-                self.chord = random_chord();
+                self.chord = random_chord(self.use_dbl_accidentals);
                 self.revealed = false
             }
+            Msg::ToggleDblAccidentals => self.use_dbl_accidentals = !self.use_dbl_accidentals,
         }
         true
     }
@@ -109,6 +122,7 @@ impl Component for App {
                 <button class="btn btn-primary" onclick=on_reveal>{ "Reveal answer" }</button>
             }
         };
+        let on_toggle = self.link.callback(|_| Msg::ToggleDblAccidentals);
         let score = format!("{} out of {} correct", self.num_correct, self.num_chords);
         html! {
             <>
@@ -118,6 +132,19 @@ impl Component for App {
                 <div class="score-wrapper">{ self.chord.to_svg() }</div>
                 <div class="answer">{ answer }</div>
                 { button }
+                <h2>{ "Settings" }</h2>
+                <div class="form-check">
+                    <input
+                        id="dbl-toggle"
+                        class="form-check-input"
+                        type="checkbox"
+                        checked=self.use_dbl_accidentals
+                        onchange=on_toggle
+                    />
+                    <label for="dbl-toggle" class="form-check-label">
+                        { "Allow double sharps and flats" }
+                    </label>
+                </div>
             </main>
             <footer class="footer">
                 <div class="container text-muted">

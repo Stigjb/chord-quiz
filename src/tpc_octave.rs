@@ -3,12 +3,6 @@ use tonality::{Interval, Tpc};
 #[derive(Clone, Debug, PartialEq)]
 pub struct TpcOctave(pub Tpc, pub i8);
 
-impl TpcOctave {
-    pub fn add_octave(&self) -> Self {
-        Self(self.0, self.1 + 1)
-    }
-}
-
 impl std::ops::Add<Interval> for TpcOctave {
     type Output = Option<TpcOctave>;
 

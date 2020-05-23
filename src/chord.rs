@@ -70,7 +70,7 @@ impl Chord {
 impl Default for Chord {
     fn default() -> Self {
         let root = TpcOctave(Tpc::C, 4);
-        Self::new(root, Kind::Triad(Triad::Maj)).unwrap()
+        Self::new(root, Kind::Maj).unwrap()
     }
 }
 
@@ -120,15 +120,15 @@ impl fmt::Display for Chord {
             })
             .unwrap_or("");
         let kind = match self.kind {
-            Kind::Triad(Triad::Aug) => "+",
-            Kind::Triad(Triad::Maj) => "",
-            Kind::Triad(Triad::Min) => "m",
-            Kind::Triad(Triad::Dim) => "m♭5",
-            Kind::Tetrad(Tetrad::Maj7) => "maj7",
-            Kind::Tetrad(Tetrad::Min7) => "m7",
-            Kind::Tetrad(Tetrad::Min7b5) => "m7♭5",
-            Kind::Tetrad(Tetrad::Dom7) => "7",
-            Kind::Tetrad(Tetrad::Dim7) => "dim7",
+            Kind::Aug => "+",
+            Kind::Maj => "",
+            Kind::Min => "m",
+            Kind::Dim => "m♭5",
+            Kind::Maj7 => "maj7",
+            Kind::Min7 => "m7",
+            Kind::Dom7 => "7",
+            Kind::Dim7 => "dim7",
+            Kind::Min7b5 => "m7♭5",
         };
         write!(f, "{:?}{}{}", step, alter, kind)
     }
@@ -136,47 +136,10 @@ impl fmt::Display for Chord {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Kind {
-    Triad(Triad),
-    Tetrad(Tetrad),
-}
-
-impl Kind {
-    pub fn intervals(&self) -> Vec<Interval> {
-        match self {
-            Self::Triad(t) => t.intervals(),
-            Self::Tetrad(t) => t.intervals(),
-        }
-    }
-    pub fn with_root(&self, root: &TpcOctave) -> Option<Vec<TpcOctave>> {
-        self.intervals()
-            .iter()
-            .map(|&interval| root.clone() + interval)
-            .collect()
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum Triad {
     Maj,
     Min,
     Dim,
     Aug,
-}
-
-impl Triad {
-    pub fn intervals(&self) -> Vec<Interval> {
-        use Interval::*;
-        match self {
-            Self::Maj => vec![Unison, Maj3, P5],
-            Self::Min => vec![Unison, Min3, P5],
-            Self::Dim => vec![Unison, Min3, Dim5],
-            Self::Aug => vec![Unison, Maj3, Aug5],
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum Tetrad {
     Dom7,
     Maj7,
     Min7,
@@ -184,15 +147,46 @@ pub enum Tetrad {
     Dim7,
 }
 
-impl Tetrad {
+impl Kind {
     pub fn intervals(&self) -> Vec<Interval> {
         use Interval::*;
         match self {
-            Tetrad::Dom7 => vec![Unison, Maj3, P5, Min7],
-            Tetrad::Maj7 => vec![Unison, Maj3, P5, Maj7],
-            Tetrad::Min7 => vec![Unison, Min3, P5, Min7],
-            Tetrad::Min7b5 => vec![Unison, Min3, Dim5, Min7],
-            Tetrad::Dim7 => vec![Unison, Min3, Dim5, Dim7],
+            Self::Maj => vec![Unison, Maj3, P5],
+            Self::Min => vec![Unison, Min3, P5],
+            Self::Dim => vec![Unison, Min3, Dim5],
+            Self::Aug => vec![Unison, Maj3, Aug5],
+            Self::Dom7 => vec![Unison, Maj3, P5, Min7],
+            Self::Maj7 => vec![Unison, Maj3, P5, Maj7],
+            Self::Min7 => vec![Unison, Min3, P5, Min7],
+            Self::Min7b5 => vec![Unison, Min3, Dim5, Min7],
+            Self::Dim7 => vec![Unison, Min3, Dim5, Dim7],
         }
+    }
+
+    pub fn with_root(&self, root: &TpcOctave) -> Option<Vec<TpcOctave>> {
+        self.intervals()
+            .iter()
+            .map(|&interval| root.clone() + interval)
+            .collect()
+    }
+
+    pub fn flattest_root(&self) -> Tpc {
+        let flattest_interval = self.intervals().iter().min().unwrap().clone();
+        (Tpc::Fbb - flattest_interval).unwrap().max(Tpc::Fb)
+    }
+
+    pub fn flattest_root_no_dbl_flat(&self) -> Tpc {
+        let flattest_interval = self.intervals().iter().min().unwrap().clone();
+        (Tpc::Fb - flattest_interval).unwrap().max(Tpc::Fb)
+    }
+
+    pub fn sharpest_root(&self) -> Tpc {
+        let sharpest_interval = self.intervals().iter().max().unwrap().clone();
+        (Tpc::Bss - sharpest_interval).unwrap().min(Tpc::Bs)
+    }
+
+    pub fn sharpest_root_no_dbl_sharp(&self) -> Tpc {
+        let sharpest_interval = self.intervals().iter().max().unwrap().clone();
+        (Tpc::Bs - sharpest_interval).unwrap().min(Tpc::Bs)
     }
 }
