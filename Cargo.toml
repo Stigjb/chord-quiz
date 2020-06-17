@@ -9,7 +9,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 log = "0.4.8"
-num-traits = "0.2.11"
+num-traits = "0.2.12"
 rand = { version = "0.7.3", features = ["wasm-bindgen"] }
 serde = "1.0.110"
 serde_derive = "1.0.110"
