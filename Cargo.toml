@@ -17,7 +17,7 @@ tonality = "0.1.1"
 wasm-bindgen = "0.2.62"
 wasm-logger = "0.2.0"
 wee_alloc = "0.4.5"
-yew = "0.16.2"
+yew = "0.17.2"
 web-sys = "0.3.39"
 
 [dev-dependencies]
