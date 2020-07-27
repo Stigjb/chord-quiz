@@ -59,7 +59,7 @@ fn random_chord(use_dbl_accidentals: bool) -> Chord {
     let octave = rng.gen_range(2, 5);
     let root = TpcOctave(tpc, octave);
     Chord::new(root.clone(), chord.clone())
-        .expect(&format!("Out of range with {:?}, {:?}", root, chord))
+        .unwrap_or_else(|| panic!("Out of range with {:?}, {:?}", root, chord))
 }
 
 impl Component for App {

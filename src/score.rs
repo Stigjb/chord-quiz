@@ -17,7 +17,7 @@ const ACCIDENTAL_SHARP: char = '\u{e262}';
 const ACCIDENTAL_DOUBLE_SHARP: char = '\u{e263}';
 const ACCIDENTAL_DOUBLE_FLAT: char = '\u{e264}';
 
-fn accidental_glyph(acc: &Accidental) -> char {
+fn accidental_glyph(acc: Accidental) -> char {
     match acc {
         Accidental::DblFlat => ACCIDENTAL_DOUBLE_FLAT,
         Accidental::Flat => ACCIDENTAL_FLAT,
@@ -70,7 +70,7 @@ impl Builder {
             .iter()
             .zip(indents)
             .map(|((acc, pos), indent)| {
-                let glyph = accidental_glyph(acc);
+                let glyph = accidental_glyph(*acc);
                 let y = pos.to_y();
                 html! { <text x=self.cursor + indent y=y>{ glyph }</text> }
             })

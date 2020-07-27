@@ -1,5 +1,6 @@
 #![recursion_limit = "512"]
 #![warn(clippy::pedantic)]
+#![allow(clippy::cast_lossless, clippy::non_ascii_literal)]
 
 mod app;
 mod chord;
@@ -9,9 +10,7 @@ mod tpc_octave;
 
 use wasm_bindgen::prelude::*;
 
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
-#[cfg(feature = "wee_alloc")]
+// Use `wee_alloc` as the global allocator.
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 

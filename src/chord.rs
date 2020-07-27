@@ -111,14 +111,13 @@ impl fmt::Display for Chord {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (step, alter) = self.root.0.altered_step(None);
         let alter = alter
-            .map(|acc| match acc {
+            .map_or("", |acc| match acc {
                 Accidental::DblFlat => "♭♭",
                 Accidental::Flat => "♭",
                 Accidental::Natural => "",
                 Accidental::Sharp => "♯",
                 Accidental::DblSharp => "♯♯",
-            })
-            .unwrap_or("");
+            });
         let kind = match self.kind {
             Kind::Aug => "+",
             Kind::Maj => "",
@@ -148,6 +147,7 @@ pub enum Kind {
 }
 
 impl Kind {
+    #[allow(clippy::enum_glob_use)]
     pub fn intervals(&self) -> Vec<Interval> {
         use Interval::*;
         match self {
@@ -171,22 +171,22 @@ impl Kind {
     }
 
     pub fn flattest_root(&self) -> Tpc {
-        let flattest_interval = self.intervals().iter().min().unwrap().clone();
+        let flattest_interval = *self.intervals().iter().min().unwrap();
         (Tpc::Fbb - flattest_interval).unwrap().max(Tpc::Fb)
     }
 
     pub fn flattest_root_no_dbl_flat(&self) -> Tpc {
-        let flattest_interval = self.intervals().iter().min().unwrap().clone();
+        let flattest_interval = *self.intervals().iter().min().unwrap();
         (Tpc::Fb - flattest_interval).unwrap().max(Tpc::Fb)
     }
 
     pub fn sharpest_root(&self) -> Tpc {
-        let sharpest_interval = self.intervals().iter().max().unwrap().clone();
+        let sharpest_interval = *self.intervals().iter().max().unwrap();
         (Tpc::Bss - sharpest_interval).unwrap().min(Tpc::Bs)
     }
 
     pub fn sharpest_root_no_dbl_sharp(&self) -> Tpc {
-        let sharpest_interval = self.intervals().iter().max().unwrap().clone();
+        let sharpest_interval = *self.intervals().iter().max().unwrap();
         (Tpc::Bs - sharpest_interval).unwrap().min(Tpc::Bs)
     }
 }
