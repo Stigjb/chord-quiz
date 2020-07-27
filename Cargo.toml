@@ -21,4 +21,4 @@ yew = "0.16.2"
 web-sys = "0.3.39"
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.12"
+wasm-bindgen-test = "0.3.15"
