@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 log = "0.4.8"
 num-traits = "0.2.11"
 rand = { version = "0.7.3", features = ["wasm-bindgen"] }
-serde = "1.0.110"
+serde = "1.0.119"
 serde_derive = "1.0.110"
 tonality = "0.1.1"
 wasm-bindgen = "0.2.62"
